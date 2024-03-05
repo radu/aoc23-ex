@@ -1,0 +1,243 @@
+# Advent of Code - Day 01
+
+```elixir
+Mix.install([
+  {:kino_aoc, "~> 0.1"}
+])
+```
+
+## Introduction
+
+--> Content
+
+## Puzzle
+
+<!-- livebook:{"attrs":"eyJhc3NpZ25fdG8iOiJwdXp6bGVfaW5wdXQiLCJkYXkiOiIxIiwic2Vzc2lvbl9zZWNyZXQiOiJBT0NfU0VTU0lPTiIsInllYXIiOiIyMDIzIn0","chunks":null,"kind":"Elixir.KinoAOC.HelperCell","livebook_object":"smart_cell"} -->
+
+```elixir
+{:ok, puzzle_input} =
+  KinoAOC.download_puzzle("2023", "1", System.fetch_env!("LB_AOC_SESSION"))
+```
+
+## Parser
+
+### Code - Parser
+
+```elixir
+defmodule Parser do
+  def parse(input) do
+    input
+    |> String.split("\n", trim: true)
+  end
+end
+```
+
+### Tests - Parser
+
+```elixir
+ExUnit.start(autorun: false)
+
+defmodule ParserTest do
+  use ExUnit.Case, async: true
+  import Parser
+
+  @input """
+  1abc2
+  pqr3stu8vwx
+  a1b2c3d4e5f
+  treb7uchet
+  """
+
+  @expected [
+    "1abc2",
+    "pqr3stu8vwx",
+    "a1b2c3d4e5f",
+    "treb7uchet"
+  ]
+
+  test "parse test" do
+    actual = parse(@input)
+    assert actual == @expected
+  end
+end
+
+ExUnit.run()
+```
+
+<!-- livebook:{"branch_parent_index":2} -->
+
+## Part One
+
+### Code - Part 1
+
+```elixir
+defmodule PartOne do
+  def solve(input) do
+    IO.puts("--- Part One ---")
+    IO.puts("Result: #{run(input)}")
+  end
+
+  def extract_digits(<<>>, acc) do
+    acc |> Enum.reverse()
+  end
+
+  def extract_digits(<<digit, rest::binary>>, acc) when digit in ?0..?9 do
+    extract_digits(rest, [digit - ?0 | acc])
+  end
+
+  def extract_digits(<<_, rest::binary>>, acc) do
+    extract_digits(rest, acc)
+  end
+
+  def first_and_last(list) do
+    {number, _} =
+      [List.first(list), List.last(list)]
+      |> Enum.map(fn x -> Integer.to_charlist(x) end)
+      |> List.to_string()
+      |> Integer.parse()
+
+    number
+  end
+
+  def run_line(line) do
+    line
+    |> extract_digits([])
+    |> first_and_last
+  end
+
+  def run(input) do
+    input
+    |> Parser.parse()
+    |> Enum.map(fn x -> run_line(x) end)
+    |> Enum.sum()
+  end
+end
+```
+
+### Tests - Part 1
+
+```elixir
+ExUnit.start(autorun: false)
+
+defmodule PartOneTest do
+  use ExUnit.Case, async: true
+  import PartOne
+
+  @input """
+  1abc2
+  pqr3stu8vwx
+  a1b2c3d4e5f
+  treb7uchet
+  """
+
+  @expected [12, 38, 15, 77] |> Enum.sum()
+
+  test "part one" do
+    actual = run(@input)
+    assert actual == @expected
+  end
+end
+
+ExUnit.run()
+```
+
+### Solution - Part 1
+
+```elixir
+PartOne.solve(puzzle_input)
+```
+
+<!-- livebook:{"branch_parent_index":2} -->
+
+## Part Two
+
+### Code - Part 2
+
+```elixir
+defmodule PartTwo do
+  def solve(input) do
+    IO.puts("--- Part One ---")
+    IO.puts("Result: #{run(input)}")
+  end
+
+  def extract_digits(<<>>, acc) do
+    acc |> Enum.reverse()
+  end
+
+  def extract_digits(<<digit, rest::binary>>, acc) when digit in ?0..?9 do
+    extract_digits(rest, [digit - ?0 | acc])
+  end
+
+  def extract_digits(<<_, rest::binary>> = line, acc) do
+    digit =
+      ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"]
+      |> Enum.find_index(fn dig -> String.starts_with?(line, dig) end)
+
+    if digit do
+      extract_digits(rest, [digit | acc])
+    else
+      extract_digits(rest, acc)
+    end
+  end
+
+  def first_and_last(list) do
+    {number, _} =
+      [List.first(list), List.last(list)]
+      |> Enum.map(fn x -> Integer.to_charlist(x) end)
+      |> List.to_string()
+      |> Integer.parse()
+
+    number
+  end
+
+  def run_line(line) do
+    line
+    |> extract_digits([])
+    |> first_and_last
+  end
+
+  def run(input) do
+    input
+    |> Parser.parse()
+    |> Enum.map(fn x -> run_line(x) end)
+    |> Enum.sum()
+  end
+end
+```
+
+### Tests - Part 2
+
+```elixir
+ExUnit.start(autorun: false)
+
+defmodule PartTwoTest do
+  use ExUnit.Case, async: true
+  import PartTwo
+
+  @input """
+  two1nine
+  eightwothree
+  abcone2threexyz
+  xtwone3four
+  4nineeightseven2
+  zoneight234
+  7pqrstsixteen
+  """
+  @expected [29, 83, 13, 24, 42, 14, 76] |> Enum.sum()
+
+  test "part two" do
+    actual = run(@input)
+    assert actual == @expected
+  end
+end
+
+ExUnit.run()
+```
+
+### Solution - Part 2
+
+```elixir
+PartTwo.solve(puzzle_input)
+```
+
+<!-- livebook:{"offset":3996,"stamp":{"token":"XCP.vgkcPwl1zaF09RM2x8RUA_mfY6l8nrM8r2kDKCJxinO6iBQKyomWD2jjoT6Nan8DK9H1kIzYVD12ZGcyeMVnla17sYEIfenMGMI5eZohTG43OkGnX5IoISt3u5jfj18Yx2DgPWw","version":2}} -->

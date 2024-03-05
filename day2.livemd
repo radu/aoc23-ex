@@ -1,0 +1,300 @@
+# Advent of Code - Day 02
+
+```elixir
+Mix.install([
+  {:kino_aoc, "~> 0.1"}
+])
+```
+
+## Introduction
+
+--> Content
+
+## Puzzle
+
+<!-- livebook:{"attrs":"eyJhc3NpZ25fdG8iOiJwdXp6bGVfaW5wdXQiLCJkYXkiOiIyIiwic2Vzc2lvbl9zZWNyZXQiOiJBT0NfU0VTU0lPTiIsInllYXIiOiIyMDIzIn0","chunks":null,"kind":"Elixir.KinoAOC.HelperCell","livebook_object":"smart_cell"} -->
+
+```elixir
+{:ok, puzzle_input} =
+  KinoAOC.download_puzzle("2023", "2", System.fetch_env!("LB_AOC_SESSION"))
+```
+
+## Parser
+
+### Code - Parser
+
+```elixir
+defmodule Round do
+  defstruct red: 0, green: 0, blue: 0
+
+  def parse(round) when is_binary(round) do
+    round
+    |> String.split(", ")
+    |> Enum.map(fn pair ->
+      pair
+      |> String.split(" ")
+      |> then(fn [num, color] ->
+        {String.to_existing_atom(color), String.to_integer(num)}
+      end)
+    end)
+  end
+
+  def possible?(round, max_pieces) do
+    round
+    |> Enum.all?(fn {color, cnt} -> cnt <= max_pieces[color] end)
+  end
+end
+
+defmodule Game do
+  defstruct [:id, :rounds]
+
+  def parse(game) when is_binary(game) do
+    Regex.named_captures(~r/^Game (?<id_text>\d*): (?<rounds_text>.*)$/, game)
+    |> then(fn %{"id_text" => id_text, "rounds_text" => rounds_text} ->
+      %{
+        id: String.to_integer(id_text),
+        rounds:
+          String.split(rounds_text, "; ")
+          |> Enum.map(fn round -> Round.parse(round) end)
+      }
+    end)
+  end
+
+  def possible?(game, max_pieces) do
+    game.rounds
+    |> Enum.all?(fn round ->
+      Round.possible?(round, max_pieces)
+    end)
+  end
+end
+
+defmodule Parser do
+  def parse(input) do
+    input
+    |> String.split("\n", trim: true)
+    |> Enum.map(fn line -> Game.parse(line) end)
+  end
+end
+```
+
+```elixir
+expected =
+  """
+  Game 1: 3 blue, 4 red; 1 red, 2 green, 6 blue; 2 green
+  Game 2: 1 blue, 2 green; 3 green, 4 blue, 1 red; 1 green, 1 blue
+  Game 3: 8 green, 6 blue, 20 red; 5 blue, 4 red, 13 green; 5 green, 1 red
+  Game 4: 1 green, 3 red, 6 blue; 3 green, 6 red; 3 green, 15 blue, 14 red
+  Game 5: 6 red, 1 blue, 3 green; 2 blue, 1 red, 2 green
+  """
+  |> Parser.parse()
+```
+
+### Tests - Parser
+
+```elixir
+ExUnit.start(autorun: false)
+
+defmodule ParserTest do
+  use ExUnit.Case, async: true
+  import Parser
+
+  @input """
+  Game 1: 3 blue, 4 red; 1 red, 2 green, 6 blue; 2 green
+  Game 2: 1 blue, 2 green; 3 green, 4 blue, 1 red; 1 green, 1 blue
+  Game 3: 8 green, 6 blue, 20 red; 5 blue, 4 red, 13 green; 5 green, 1 red
+  Game 4: 1 green, 3 red, 6 blue; 3 green, 6 red; 3 green, 15 blue, 14 red
+  Game 5: 6 red, 1 blue, 3 green; 2 blue, 1 red, 2 green
+  """
+
+  @expected expected
+
+  test "parse test" do
+    actual = parse(@input)
+    assert actual == @expected
+  end
+end
+
+ExUnit.run()
+```
+
+```elixir
+Parser.parse(puzzle_input)
+```
+
+<!-- livebook:{"branch_parent_index":2} -->
+
+## Part One
+
+### Code - Part 1
+
+```elixir
+defmodule PartOne do
+  def solve(input) do
+    IO.puts("--- Part One ---")
+    IO.puts("Result: #{run(input)}")
+  end
+
+  @max_pieces %Round{red: 12, green: 13, blue: 14}
+
+  def run(input) do
+    input
+    |> Parser.parse()
+    |> Enum.map(fn %Game{id: id, rounds: rounds} ->
+      {id, Enum.any?(rounds, fn round -> Round.possible?(round, @max_pieces) end)}
+    end)
+  end
+end
+```
+
+```elixir
+max_pieces = %{red: 12, green: 13, blue: 14}
+
+[green: 8, blue: 6, red: 20]
+|> Enum.map(fn {color, cnt} ->
+  cnt <= max_pieces[color]
+end)
+```
+
+```elixir
+max_pieces = %{red: 12, green: 13, blue: 14}
+
+"""
+Game 1: 3 blue, 4 red; 1 red, 2 green, 6 blue; 2 green
+Game 2: 1 blue, 2 green; 3 green, 4 blue, 1 red; 1 green, 1 blue
+Game 3: 8 green, 6 blue, 20 red; 5 blue, 4 red, 13 green; 5 green, 1 red
+Game 4: 1 green, 3 red, 6 blue; 3 green, 6 red; 3 green, 15 blue, 14 red
+Game 5: 6 red, 1 blue, 3 green; 2 blue, 1 red, 2 green
+"""
+|> Parser.parse()
+|> Enum.map(fn game -> Game.possible?(game, max_pieces) end)
+|> dbg()
+```
+
+### Tests - Part 1
+
+```elixir
+ExUnit.start(autorun: false)
+
+defmodule PartOneTest do
+  use ExUnit.Case, async: true
+  import PartOne
+
+  @input """
+  Game 1: 3 blue, 4 red; 1 red, 2 green, 6 blue; 2 green
+  Game 2: 1 blue, 2 green; 3 green, 4 blue, 1 red; 1 green, 1 blue
+  Game 3: 8 green, 6 blue, 20 red; 5 blue, 4 red, 13 green; 5 green, 1 red
+  Game 4: 1 green, 3 red, 6 blue; 3 green, 6 red; 3 green, 15 blue, 14 red
+  Game 5: 6 red, 1 blue, 3 green; 2 blue, 1 red, 2 green
+  """
+
+  @expected []
+
+  test "part one" do
+    actual = run(@input)
+    assert actual == @expected
+  end
+end
+
+ExUnit.run()
+```
+
+### Solution - Part 1
+
+```elixir
+PartOne.solve(puzzle_input)
+```
+
+<!-- livebook:{"branch_parent_index":2} -->
+
+## Part Two
+
+### Code - Part 2
+
+```elixir
+defmodule PartTwo do
+  def solve(input) do
+    IO.puts("--- Part One ---")
+    IO.puts("Result: #{run(input)}")
+  end
+
+  def extract_digits(<<>>, acc) do
+    acc |> Enum.reverse()
+  end
+
+  def extract_digits(<<digit, rest::binary>>, acc) when digit in ?0..?9 do
+    extract_digits(rest, [digit - ?0 | acc])
+  end
+
+  def extract_digits(<<_, rest::binary>> = line, acc) do
+    digit =
+      ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"]
+      |> Enum.find_index(fn dig -> String.starts_with?(line, dig) end)
+
+    if digit do
+      extract_digits(rest, [digit | acc])
+    else
+      extract_digits(rest, acc)
+    end
+  end
+
+  def first_and_last(list) do
+    {number, _} =
+      [List.first(list), List.last(list)]
+      |> Enum.map(fn x -> Integer.to_charlist(x) end)
+      |> List.to_string()
+      |> Integer.parse()
+
+    number
+  end
+
+  def run_line(line) do
+    line
+    |> extract_digits([])
+    |> first_and_last
+  end
+
+  def run(input) do
+    input
+    |> Parser.parse()
+    |> Enum.map(fn x -> run_line(x) end)
+    |> Enum.sum()
+  end
+end
+```
+
+### Tests - Part 2
+
+```elixir
+ExUnit.start(autorun: false)
+
+defmodule PartTwoTest do
+  use ExUnit.Case, async: true
+  import PartTwo
+
+  @input """
+  two1nine
+  eightwothree
+  abcone2threexyz
+  xtwone3four
+  4nineeightseven2
+  zoneight234
+  7pqrstsixteen
+  """
+  @expected [29, 83, 13, 24, 42, 14, 76] |> Enum.sum()
+
+  test "part two" do
+    actual = run(@input)
+    assert actual == @expected
+  end
+end
+
+ExUnit.run()
+```
+
+### Solution - Part 2
+
+```elixir
+PartTwo.solve(puzzle_input)
+```
+
+<!-- livebook:{"offset":6155,"stamp":{"token":"XCP.A79O8gFCAqrFqMoNVyxsLuxTN9IwA-vRQPM13Zn3YYxgkTE_b3KcyVOHsQdM_re-daMtCPTPDOOp6n-iZPnxj6OeVsoeV0oCQuEGRW2TV1xJZA3_pK0","version":2}} -->
