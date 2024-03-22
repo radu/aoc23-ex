@@ -1,0 +1,22 @@
+# Advent of Code - Day 10
+
+```elixir
+Mix.install([
+  {:kino_aoc, "~> 0.1"}
+])
+```
+
+## Introduction
+
+--> Content
+
+## Puzzle
+
+<!-- livebook:{"attrs":"eyJhc3NpZ25fdG8iOiJwdXp6bGVfaW5wdXQiLCJkYXkiOiIxMCIsInNlc3Npb25fc2VjcmV0IjoiQU9DX1NFU1NJT04iLCJ5ZWFyIjoiMjAyMyJ9","chunks":null,"kind":"Elixir.KinoAOC.HelperCell","livebook_object":"smart_cell"} -->
+
+```elixir
+{:ok, puzzle_input} =
+  KinoAOC.download_puzzle("2023", "10", System.fetch_env!("LB_AOC_SESSION"))
+```
+
+<!-- livebook:{"offset":461,"stamp":{"token":"XCP.70FFJpb9Ls1jKWwR8zc3_MFcYVwfTJ3ZwQfIIj_lh9v6Knc5LF8AjJxVnkVIIRNGZJZ9U0iPnl63GgnbHgBAWgWKt65Fy1HHyJ2coOvrk8bUJpnXDag","version":2}} -->

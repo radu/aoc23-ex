@@ -1,0 +1,81 @@
+# Advent of Code - Day 6
+
+```elixir
+Mix.install([
+  {:kino_aoc, "~> 0.1"}
+])
+```
+
+## Introduction
+
+--> Content
+
+## Puzzle
+
+<!-- livebook:{"attrs":"eyJhc3NpZ25fdG8iOiJwdXp6bGVfaW5wdXQiLCJkYXkiOiI2Iiwic2Vzc2lvbl9zZWNyZXQiOiJBT0NfU0VTU0lPTiIsInllYXIiOiIyMDIzIn0","chunks":null,"kind":"Elixir.KinoAOC.HelperCell","livebook_object":"smart_cell"} -->
+
+```elixir
+{:ok, puzzle_input} =
+  KinoAOC.download_puzzle("2023", "6", System.fetch_env!("LB_AOC_SESSION"))
+```
+
+```elixir
+example_input =
+  """
+  Time:      7  15   30
+  Distance:  9  40  200
+  """
+  |> String.trim()
+```
+
+```elixir
+[times_raw, dist_raw] = puzzle_input |> String.split("\n")
+
+[_ | times] = times_raw |> String.split()
+times = times |> Enum.map(&String.to_integer/1)
+
+[_ | distances] = dist_raw |> String.split()
+distances = distances |> Enum.map(&String.to_integer/1)
+```
+
+```elixir
+Enum.zip(times, distances)
+|> Enum.map(fn {t, d} ->
+  sq = ((t ** 2 - 4 * d) ** 0.5) |> IO.inspect()
+
+  if sq == trunc(sq) do
+    (div(t - trunc(sq) + 1, 2) + 1)..(div(t + trunc(sq), 2) - 1)
+  else
+    div(t - trunc(sq) + 1, 2)..div(t + trunc(sq), 2)
+  end
+  |> Range.size()
+end)
+|> IO.inspect()
+|> Enum.reduce(&Kernel.*/2)
+```
+
+```elixir
+[times_raw, dist_raw] = puzzle_input |> String.split("\n")
+[_ | times] = times_raw |> String.split()
+time = times |> Enum.join() |> String.to_integer()
+
+[_ | dist] = dist_raw |> String.split()
+dist = dist |> Enum.join() |> String.to_integer()
+```
+
+```elixir
+{time, dist}
+|> then(fn {t, d} ->
+  sq = ((t ** 2 - 4 * d) ** 0.5) |> IO.inspect()
+
+  if sq == trunc(sq) do
+    (div(t - trunc(sq) + 1, 2) + 1)..(div(t + trunc(sq), 2) - 1)
+  else
+    div(t - trunc(sq) + 1, 2)..div(t + trunc(sq), 2)
+  end
+  |> Range.size()
+end)
+|> IO.inspect()
+```
+
+<!-- livebook:{"offset":1725,"stamp":{"token":"XCP.lABeM2TZt5X7ioHL1CxH3bX1DTEGdRbmMaeP5TAMxCfArmNJ_jxDGymgp_E9KBZJb5Bbw2KpfjieR4D2tdDXRZUC8OjYgZIqubvUxVdQdJTMZQhGFfo","version":2}} -->

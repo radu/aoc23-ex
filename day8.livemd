@@ -1,0 +1,81 @@
+# Advent of Code - Day 8
+
+```elixir
+Mix.install([
+  {:kino_aoc, "~> 0.1"},
+  {:math, "~> 0.7.0"}
+])
+```
+
+## Introduction
+
+
+
+<!-- livebook:{"break_markdown":true} -->
+
+--> Content
+
+## Puzzle
+
+<!-- livebook:{"attrs":"eyJhc3NpZ25fdG8iOiJwdXp6bGVfaW5wdXQiLCJkYXkiOiI4Iiwic2Vzc2lvbl9zZWNyZXQiOiJBT0NfU0VTU0lPTiIsInllYXIiOiIyMDIzIn0","chunks":null,"kind":"Elixir.KinoAOC.HelperCell","livebook_object":"smart_cell"} -->
+
+```elixir
+{:ok, puzzle_input} =
+  KinoAOC.download_puzzle("2023", "8", System.fetch_env!("LB_AOC_SESSION"))
+```
+
+```elixir
+[directions, raw_map] = puzzle_input |> String.split("\n\n")
+```
+
+```elixir
+map =
+  raw_map
+  |> String.split("\n")
+  |> Enum.map(fn str ->
+    [start, opts] = String.split(str, " = ")
+    [left, right] = opts |> String.slice(1..-2//1) |> String.split(", ")
+    {start, %{"L" => left, "R" => right}}
+  end)
+  |> Enum.into(%{})
+```
+
+```elixir
+defmodule MapFind do
+  def follow(<<_::binary-2, "Z">>, _, _, cnt), do: cnt |> IO.inspect()
+
+  def follow(cur, dir, map, cnt) do
+    <<step::binary-size(1), rest::binary>> = dir
+
+    next = map[cur][step]
+
+    follow(next, rest <> step, map, cnt + 1)
+  end
+
+  def follow(dir, map), do: follow("AAA", dir, map, 0)
+
+  def ghost_follow(dir, map) do
+    list_a = Map.keys(map) |> Enum.filter(fn x -> String.ends_with?(x, "A") end)
+
+    Enum.map(list_a, fn start -> follow(start, dir, map, 0) end)
+  end
+end
+```
+
+```elixir
+directions
+```
+
+```elixir
+
+```
+
+```elixir
+MapFind.follow(directions, map)
+```
+
+```elixir
+MapFind.ghost_follow(directions, map) |> Enum.reduce(fn a, b -> Math.lcm(a, b) end)
+```
+
+<!-- livebook:{"offset":1574,"stamp":{"token":"XCP.yYCO0DsLyme79UQMFJVyC6RQOlnkNUKkTtkJOCT5aG_M8d26V6t_EhGJ5rquKCGZLTi66TS77VaSTQzvIuHjXvR0YbHy2OiCdOu2rJnNQZcPHDF_xk4","version":2}} -->

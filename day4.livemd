@@ -1,0 +1,115 @@
+# Advent of Code - Day 4
+
+```elixir
+Mix.install([
+  {:kino_aoc, "~> 0.1"}
+])
+```
+
+## Introduction
+
+--> Content
+
+## Puzzle
+
+<!-- livebook:{"attrs":"eyJhc3NpZ25fdG8iOiJwdXp6bGVfaW5wdXQiLCJkYXkiOiI0Iiwic2Vzc2lvbl9zZWNyZXQiOiJBT0NfU0VTU0lPTiIsInllYXIiOiIyMDIzIn0","chunks":null,"kind":"Elixir.KinoAOC.HelperCell","livebook_object":"smart_cell"} -->
+
+```elixir
+{:ok, puzzle_input} =
+  KinoAOC.download_puzzle("2023", "4", System.fetch_env!("LB_AOC_SESSION"))
+```
+
+### Solution - Part 1
+
+```elixir
+defmodule Card do
+  defstruct id: nil, have: [], winning: []
+
+  def parse(<<"Card ", content::binary>> = str) when is_binary(str) do
+    [id, numbers] = String.split(content, ":", trim: true)
+    [win_nums_str, have_nums_str] = String.split(numbers, "|", trim: true)
+
+    %Card{
+      id: String.trim(id) |> String.to_integer(),
+      have: String.split(have_nums_str, " ", trim: true) |> Enum.map(&String.to_integer/1),
+      winning: String.split(win_nums_str, " ", trim: true) |> Enum.map(&String.to_integer/1)
+    }
+  end
+
+  def winners(card) when is_struct(card, Card) do
+    card.have -- card.have -- card.winning
+  end
+end
+```
+
+```elixir
+"""
+Card 1: 41 48 83 86 17 | 83 86  6 31 17  9 48 53
+Card 2: 13 32 20 16 61 | 61 30 68 82 17 32 24 19
+Card 3:  1 21 53 59 44 | 69 82 63 72 16 21 14  1
+Card 4: 41 92 73 84 69 | 59 84 76 51 58  5 54 83
+Card 5: 87 83 26 28 32 | 88 30 70 12 93 22 82 36
+Card 6: 31 18 13 56 72 | 74 77 10 23 35 67 36 11
+"""
+|> String.trim_trailing()
+|> String.split("\n")
+|> IO.inspect()
+|> Enum.map(fn x ->
+  x
+  |> Card.parse()
+  |> Card.winners()
+  |> Enum.count()
+  |> then(fn
+    0 -> 0
+    x -> Integer.pow(2, x - 1)
+  end)
+end)
+|> Enum.sum()
+```
+
+```elixir
+puzzle_input
+|> String.trim_trailing()
+|> String.split("\n")
+|> Enum.map(fn x ->
+  x
+  |> Card.parse()
+  |> Card.winners()
+  |> Enum.count()
+  |> then(fn
+    0 -> 0
+    x -> Integer.pow(2, x - 1)
+  end)
+end)
+|> Enum.sum()
+```
+
+```elixir
+winners =
+  puzzle_input
+  |> String.trim_trailing()
+  |> String.split("\n")
+  |> Enum.map(fn x ->
+    x
+    |> Card.parse()
+    |> Card.winners()
+    |> Enum.count()
+  end)
+
+card_nums = List.duplicate(1, Enum.count(winners)) |> IO.inspect()
+
+for w <- winners,
+    reduce: {0, card_nums},
+    do:
+      ({total_score, [cur_num | rest_nums]} ->
+         {total_score + cur_num,
+          rest_nums
+          |> Enum.with_index()
+          |> Enum.map(fn
+            {cnt, idx} when idx < w -> cnt + cur_num
+            {cnt, _} -> cnt
+          end)}
+         |> IO.inspect())
+```
+
+<!-- livebook:{"offset":2496,"stamp":{"token":"XCP.Ovx9cWijeVQ4uXC2pmg6Rl2DYQDpwd1jb26O9IDNMH-vlpmTswYPoQkqq3UG2YxDIYZ8oAf2AKNpWolul7Sd1Q4n9cDUTDzV_bnEKbFVat3zQuZvYVo","version":2}} -->

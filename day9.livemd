@@ -1,0 +1,122 @@
+# Advent of Code - Day 9
+
+```elixir
+Mix.install([
+  {:kino_aoc, "~> 0.1"},
+  {:math, "~> 0.7.0"}
+])
+```
+
+## Introduction
+
+--> Content
+
+## Puzzle
+
+<!-- livebook:{"attrs":"eyJhc3NpZ25fdG8iOiJwdXp6bGVfaW5wdXQiLCJkYXkiOiI5Iiwic2Vzc2lvbl9zZWNyZXQiOiJBT0NfU0VTU0lPTiIsInllYXIiOiIyMDIzIn0","chunks":null,"kind":"Elixir.KinoAOC.HelperCell","livebook_object":"smart_cell"} -->
+
+```elixir
+{:ok, puzzle_input} =
+  KinoAOC.download_puzzle("2023", "9", System.fetch_env!("LB_AOC_SESSION"))
+```
+
+```elixir
+sequences =
+  puzzle_input
+  |> String.split("\n")
+  |> Enum.map(fn x ->
+    x
+    |> String.split()
+    |> Enum.map(&String.to_integer/1)
+  end)
+```
+
+```elixir
+defmodule Extrapolate do
+  def all_zeroes?(a), do: not Enum.any?(a, fn x -> x != 0 end)
+
+  def extrapolate(list), do: reduce(list, [])
+
+  def reduce(list, acc) do
+    if all_zeroes?(list) do
+      extrapolate([0 | list], acc)
+    else
+      reduce(
+        List.zip([
+          Enum.slice(list, 0..-2//1),
+          Enum.slice(list, 1..-1//1)
+        ])
+        |> Enum.map(fn {a, b} -> b - a end),
+        [Enum.at(list, 0) | acc]
+      )
+    end
+  end
+
+  def extrapolate(acc, []), do: acc
+
+  def extrapolate(list, [first | rest]) do
+    {last, ext} =
+      Enum.reduce(
+        list
+        |> Enum.reverse(),
+        {first, []},
+        fn el, {acc, ext} ->
+          {el + acc, [acc | ext]}
+        end
+      )
+
+    rec = [last | ext]
+
+    extrapolate(rec, rest)
+  end
+end
+```
+
+```elixir
+Extrapolate.extrapolate([10, 13, 16, 21, 30, 45])
+```
+
+```elixir
+sequences |> Enum.map(&Extrapolate.extrapolate/1) |> Enum.map(&hd/1) |> Enum.sum()
+```
+
+```elixir
+defmodule Prepopulate do
+  def all_zeroes?(a), do: not Enum.any?(a, fn x -> x != 0 end)
+
+  def prepopulate(list), do: reduce(list, [])
+
+  def reduce(list, acc) do
+    if all_zeroes?(list) do
+      prepopulate(0, acc)
+    else
+      reduce(
+        List.zip([
+          Enum.slice(list, 0..-2//1),
+          Enum.slice(list, 1..-1//1)
+        ])
+        |> Enum.map(fn {a, b} -> b - a end),
+        [Enum.at(list, 0) | acc]
+      )
+    end
+  end
+
+  def prepopulate(acc, []), do: acc
+
+  def prepopulate(list, [first | rest]) do
+    rec = first - list
+
+    prepopulate(rec, rest)
+  end
+end
+```
+
+```elixir
+[10, 13, 16, 21, 30, 45] |> Prepopulate.prepopulate()
+```
+
+```elixir
+sequences |> Enum.map(&Prepopulate.prepopulate/1) |> Enum.sum()
+```
+
+<!-- livebook:{"offset":2348,"stamp":{"token":"XCP.Su0RVUkNyeEXR5uxVxBsVKKOCLU2f5N_13LmTi2lLHedKFsn60Gus5pcAg0zYGOzcI7mDFSmNe5Fsin3na2MLZtdEGyf-zx1SW-NIY8MfP4A1PmkXGo","version":2}} -->

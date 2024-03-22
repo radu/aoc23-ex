@@ -1,0 +1,155 @@
+# Advent of Code - Day 5
+
+```elixir
+Mix.install([
+  {:kino_aoc, "~> 0.1"}
+])
+```
+
+## Introduction
+
+--> Content
+
+## Puzzle
+
+<!-- livebook:{"attrs":"eyJhc3NpZ25fdG8iOiJwdXp6bGVfaW5wdXQiLCJkYXkiOiI1Iiwic2Vzc2lvbl9zZWNyZXQiOiJBT0NfU0VTU0lPTiIsInllYXIiOiIyMDIzIn0","chunks":null,"kind":"Elixir.KinoAOC.HelperCell","livebook_object":"smart_cell"} -->
+
+```elixir
+{:ok, puzzle_input} =
+  KinoAOC.download_puzzle("2023", "5", System.fetch_env!("LB_AOC_SESSION"))
+```
+
+```elixir
+example_input = """
+seeds: 79 14 55 13
+
+seed-to-soil map:
+50 98 2
+52 50 48
+
+soil-to-fertilizer map:
+0 15 37
+37 52 2
+39 0 15
+
+fertilizer-to-water map:
+49 53 8
+0 11 42
+42 0 7
+57 7 4
+
+water-to-light map:
+88 18 7
+18 25 70
+
+light-to-temperature map:
+45 77 23
+81 45 19
+68 64 13
+
+temperature-to-humidity map:
+0 69 1
+1 0 69
+
+humidity-to-location map:
+60 56 37
+56 93 4
+"""
+```
+
+```elixir
+[raw_seeds | raw_maps] = puzzle_input |> String.split("\n\n")
+```
+
+```elixir
+[_ | seeds_list] = raw_seeds |> String.split(" ")
+
+seeds = seeds_list |> Enum.map(&String.to_integer/1)
+```
+
+```elixir
+defmodule MapRange do
+  defstruct dst_start: nil, src_start: nil, cnt: 0
+
+  def map_name(src, dst) do
+    Atom.to_string(src) <> "-to-" <> Atom.to_string(dst)
+  end
+
+  def do_map_array(map_arr, val) do
+    valid_map =
+      map_arr
+      |> Enum.filter(fn x -> val in x.src_start..(x.src_start + x.cnt) end)
+
+    if Enum.empty?(valid_map) do
+      val
+    else
+      valid_map
+      |> hd
+      |> then(fn x -> x.dst_start + val - x.src_start end)
+    end
+  end
+
+  def map_value(maps, val, src, dst) do
+    maps[map_name(src, dst)] |> do_map_array(val)
+  end
+end
+```
+
+```elixir
+MapRange.map_name(:seed, :soil)
+```
+
+```elixir
+maps =
+  raw_maps
+  |> Enum.map(fn s ->
+    [name_raw | map_ranges] = String.trim(s) |> String.split("\n")
+
+    name = name_raw |> String.replace_suffix(" map:", "")
+
+    ranges =
+      map_ranges
+      |> Enum.map(fn r ->
+        [dst_start, src_start, cnt] =
+          r
+          |> String.split(" ")
+          |> Enum.map(&String.to_integer/1)
+
+        %MapRange{dst_start: dst_start, src_start: src_start, cnt: cnt}
+      end)
+
+    {name, ranges}
+  end)
+  |> Enum.into(%{})
+```
+
+With this map, you can look up the soil number required for each initial seed number:
+
+* Seed number 79 corresponds to soil number 81.
+* Seed number 14 corresponds to soil number 14.
+* Seed number 55 corresponds to soil number 57.
+* Seed number 13 corresponds to soil number 13.
+
+```elixir
+Map.keys(maps)
+```
+
+```elixir
+seed_to_soil = fn r ->
+  r
+  |> Enum.map(&MapRange.map_value(maps, &1, :seed, :soil))
+  |> Enum.map(&MapRange.map_value(maps, &1, :soil, :fertilizer))
+  |> Enum.map(&MapRange.map_value(maps, &1, :fertilizer, :water))
+  |> Enum.map(&MapRange.map_value(maps, &1, :water, :light))
+  |> Enum.map(&MapRange.map_value(maps, &1, :light, :temperature))
+  |> Enum.map(&MapRange.map_value(maps, &1, :temperature, :humidity))
+  |> Enum.map(&MapRange.map_value(maps, &1, :humidity, :location))
+  |> Enum.min()
+end
+```
+
+```elixir
+seeds_many = seeds |> Enum.chunk_every(2) |> Enum.map(fn [low, cnt] -> low..(low + cnt) end)
+```
+
+<!-- livebook:{"offset":3087,"stamp":{"token":"XCP.6o4d5zzplEV0lwO3TL2hw5gyNx2dwr1fWV4uCEGrSaPUVMzYj-0VAW9udkFDgsZUBqJFSkeW5e_5SNnbE4JkjoBgwwAeIxRebrUpfHmMW28Fyp3fv00","version":2}} -->
